@@ -26,7 +26,7 @@ class AlienContact(BaseModel):
     contact_id: str = Field(min_length=5, max_length=15)
     timestamp: datetime
     location: str = Field(min_length=3, max_length=100)
-    contact_type: ContactType 
+    contact_type: ContactType
     signal_strength: float = Field(ge=0.0, le=10.0)
     duration_minutes: int = Field(ge=1, le=1440)
     witness_count: int = Field(ge=1, le=100)
@@ -36,9 +36,9 @@ class AlienContact(BaseModel):
     @model_validator(mode="after")
     def validat_contact_rule(self) -> "AlienContact":
         if not self.contact_id.startswith("AC"):
-            raise ValueError("ID must start with AC.")
+            raise ValueError("ID Contact must start with AC.")
         if (
-            self.contact_type == ContactType.PHYSICAL 
+            self.contact_type == ContactType.PHYSICAL
             and
             not self.is_verified
         ):
@@ -48,17 +48,20 @@ class AlienContact(BaseModel):
             and
             not self.witness_count >= 3
         ):
-            raise ValueError("Using telepathic contact, witness_count must be >= 3.")
+            raise ValueError(
+                "Using telepathic contact, witness_count must be >= 3."
+            )
         if not self.signal_strength > 0.7:
             raise ValueError("signal_strength must be > 0.7.")
-        return self 
+
+        return self
 
 
 def Test_valid() -> None:
     try:
         alien = AlienContact(
             contact_id="AC_2024_001",
-            timestamp="2026-07-30 14:15:06",
+            timestamp=datetime(2026, 7, 30, 14, 15, 6),
             location="Area 51, Nevada",
             contact_type=ContactType.RADIO,
             signal_strength=8.5,
@@ -75,16 +78,16 @@ def Test_valid() -> None:
         print(f"Witnesses: {alien.witness_count}")
         print(f"Message: {alien.message_received}")
     except ValidationError as e:
-        print(e.errors()[0]['msg'])
+        print(e.errors()[0]['msg'].replace("Value error, ", ""))
 
 
 def Test_invalid() -> None:
     try:
         alien_invalid = AlienContact(
             contact_id="AC_2024_001",
-            timestamp="2026-07-30 14:15:06",
+            timestamp=datetime(2026, 7, 30, 14, 15, 6),
             location="Area 51, Nevada",
-            contact_type=ContactType.RADIO,
+            contact_type=ContactType.TELEPATHIC,
             signal_strength=8.5,
             duration_minutes=45,
             witness_count=2,
@@ -99,7 +102,8 @@ def Test_invalid() -> None:
         print(f"Witnesses: {alien_invalid.witness_count}")
         print(f"Message: {alien_invalid.message_received}")
     except ValidationError as e:
-        print(e.errors()[0]['msg'])
+        print("Expected validation error:")
+        print(e.errors()[0]['msg'].replace("Value error, ", ""))
 
 
 def main() -> None:
